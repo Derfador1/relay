@@ -1,6 +1,7 @@
 CFLAGS+=-std=c11
 CFLAGS+=-pthread -Wall -Wextra -Wpedantic
 CFLAGS+=-Wwrite-strings -Wstack-usage=1024 -Wfloat-equal -Waggregate-return -Winline
+CFLAGS+=-D _POSIX_C_SOURCE>=1
 
 all: listener dispatcher
 
