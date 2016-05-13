@@ -10,7 +10,7 @@
 #include <sys/select.h>
 #include <sys/un.h>
 
-#define SOCK_PATH "echo_socket"
+#define SOCK_PATH "/home/sparadis/file"
 
 /*
 I get this code idea/implementation from
@@ -113,7 +113,7 @@ int main(void)
 				}
 				else if(i == STDIN_FILENO){
 					if ((bytes = read(i, buffer, sizeof(buffer))) > 0) {
-						if (strcmp(buffer, "q\n") == 0) {
+						if (strncmp(buffer, "q\n", 2) == 0) {
 							printf("quitting..\n");
 							close(sock);
 							exit(1);
