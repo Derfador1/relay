@@ -9,6 +9,9 @@
 #include <netdb.h>
 #include <sys/select.h>
 #include <sys/un.h>
+#include <sys/stat.h>
+
+#define MAXN 256
 
 #define SOCK_PATH "/home/sparadis/file"
 
@@ -22,23 +25,21 @@ int main(void)
 {
 	int sock;
 	int accept_s;
-	char buffer[256];
-	fd_set master;
-	fd_set read_fds;
 	int max;
-	struct sockaddr_un local;
-
 	int bytes;
+	int enable = 1;
+	int len;
+	char buffer[MAXN];
 
+	struct sockaddr_un local;
 	struct sockaddr_storage remote1;
 
 	socklen_t addrlen;
 
+	fd_set master;
+	fd_set read_fds;
 	FD_ZERO(&master);
 	FD_ZERO(&read_fds);
-
-	int enable = 1;
-	int len;
 
 	for(int a = 0; a < 256; a++) {
 		buffer[a] = '\0';
@@ -60,14 +61,14 @@ int main(void)
 	strcpy(local.sun_path, SOCK_PATH);
 	unlink(local.sun_path);
 	len = strlen(local.sun_path) + sizeof(local.sun_family);
-	//local.sin_addr.s_addr = inet_addr("127.0.0.1");
-	//local.sin_port = htons(1586);
 
 	if(bind(sock, (struct sockaddr *)&local, len) == -1) {
 		perror("binding");
 		close(sock);	
 		exit(1);
 	}
+
+	chmod(SOCK_PATH, 0777);
 
 	if (listen(sock, 5) == -1) {
 		perror("listen");
@@ -94,10 +95,10 @@ int main(void)
 			exit(1);
 		}
 
-		int i;
-		for (i = 0; i <= max; i++) {
-			if(FD_ISSET(i, &read_fds)) {
-				if(i == sock) {
+		int current;
+		for (current = 0; current <= max; current++) {
+			if(FD_ISSET(current, &read_fds)) {
+				if(current == sock) {
 					addrlen = sizeof(remote1);
 					accept_s = accept(sock, (struct sockaddr *)&remote1, &addrlen);
 
@@ -111,19 +112,18 @@ int main(void)
 						}
 					}
 				}
-				else if(i == STDIN_FILENO){
-					if ((bytes = read(i, buffer, sizeof(buffer))) > 0) {
+				else if(current == STDIN_FILENO){
+					if ((bytes = read(current, buffer, sizeof(buffer))) > 0) {
 						if (strncmp(buffer, "q\n", 2) == 0) {
 							printf("quitting..\n");
 							close(sock);
 							exit(1);
 						}
 
-						for(i = 0; i <= max; i++) {
-							if (FD_ISSET (i, &master) && i != STDIN_FILENO && i != sock) {
-								if (send(i, buffer, bytes, 0) == -1) {
+						for(current = 0; current <= max; current++) {
+							if (FD_ISSET (current, &master) && current != STDIN_FILENO && current != sock) {
+								if (send(current, buffer, bytes, 0) == -1) {
 									perror("send");
-									//exit(1);
 								}
 							}
 						}
@@ -136,19 +136,4 @@ int main(void)
 	}
 
 	close(sock);
-
-	/*
-	t = sizeof(remote);
-	if ((s2 = accept(socket, (struct sockaddr *)&remote, &t)) == -1) {
-		perror("accept");
-		exit(1);
-	}
-
-
-	close(socket);
-	*/
-	
-	//send(s, buffer, strlen(buffer), 0);
-	//recv(s, buffer, sizeof(buffer), 0);
-	//printf("%s\r\n", buffer);
 }
