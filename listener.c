@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/un.h>
 
 #define SOCK_PATH "echo_socket"
 
@@ -17,8 +18,8 @@ stackoverflow.com/questions/2605182/when-binding-a
 */
 int main(void) 
 {
-	int n, s;
-	struct sockaddr_in local;
+	int n, s, len;
+	struct sockaddr_un local;
 	char buffer[256];
 	int done;
 
@@ -26,21 +27,20 @@ int main(void)
 		buffer[a] = '\0';
 	}
 	
-	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+	if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
 		exit(1);
 	}
 
 	printf("Trying to connect...\n");
 
-	memset(&local, 0, sizeof(struct sockaddr_in));
-	local.sin_family = AF_INET;
-	local.sin_port = htons(1058);
-	//local.sin_addr.s_addr = inet_addr("10.0.0.1");
+	local.sun_family = AF_UNIX;
+	strcpy(local.sun_path, SOCK_PATH);
+	len = strlen(local.sun_path) + sizeof(local.sun_family);
 
-	if (connect(s, (struct sockaddr *)&local, sizeof(struct sockaddr)) == -1) {
+	if (connect(s, (struct sockaddr *)&local, len) == -1) {
         	perror("connect");
-        	exit(1);
+		exit(1);
     	}
 	
 	printf("Connected.\n");
@@ -64,12 +64,16 @@ int main(void)
 		}
 		*/
 
-		printf("Received: %s:%d\n", buffer, n);
+		printf("Received: %s", buffer);
 
 		for(int a = 0; a < 256; a++) {
 			buffer[a] = '\0';
 		}
 	} while(!done);
+
+	printf("\n");
+
+	close(s);
 
 	return 0;
 } 
