@@ -64,6 +64,11 @@ int main(void)
 		}
 		*/
 
+		if (strcmp(buffer, "q\n") == 0) {
+			printf("Connection cut.\n");
+			close(s);
+			exit(1);
+		}
 		printf("Received: %s", buffer);
 
 		for(int a = 0; a < 256; a++) {
