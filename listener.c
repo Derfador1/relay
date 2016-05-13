@@ -17,11 +17,14 @@ stackoverflow.com/questions/2605182/when-binding-a
 */
 int main(void) 
 {
-
-	int ret, s, t, s2;
-	int i = 0;
+	int n, s;
 	struct sockaddr_in local;
 	char buffer[256];
+	int done;
+
+	for(int a = 0; a < 256; a++) {
+		buffer[a] = '\0';
+	}
 	
 	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
@@ -41,4 +44,32 @@ int main(void)
     	}
 	
 	printf("Connected.\n");
+
+	done = 0;
+	do {
+		n = recv(s, buffer, sizeof(buffer), 0);
+		if (n <= 0) {
+			if (n < 0) { 
+				perror("recv");
+			}
+			done = 1;
+		}
+		/*
+		if (n < 0) {
+			perror("recv");
+		}
+		else {
+			printf("Server closed connection\n");
+			exit(1);
+		}
+		*/
+
+		printf("Received: %s:%d\n", buffer, n);
+
+		for(int a = 0; a < 256; a++) {
+			buffer[a] = '\0';
+		}
+	} while(!done);
+
+	return 0;
 } 
