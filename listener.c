@@ -9,6 +9,8 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 
+#define MAXN 256
+
 #define SOCK_PATH "/home/sparadis/file"
 
 /*
@@ -18,16 +20,16 @@ stackoverflow.com/questions/2605182/when-binding-a
 */
 int main(void) 
 {
-	int n, s, len;
+	int bytes, sock, len;
 	struct sockaddr_un local;
-	char buffer[256];
+	char buffer[MAXN];
 	int done;
 
-	for(int a = 0; a < 256; a++) {
-		buffer[a] = '\0';
+	for(int counter = 0; counter < MAXN; counter++) {
+		buffer[counter] = '\0';
 	}
 	
-	if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+	if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
 		exit(1);
 	}
@@ -38,7 +40,7 @@ int main(void)
 	strcpy(local.sun_path, SOCK_PATH);
 	len = strlen(local.sun_path) + sizeof(local.sun_family);
 
-	if (connect(s, (struct sockaddr *)&local, len) == -1) {
+	if (connect(sock, (struct sockaddr *)&local, len) == -1) {
         	perror("connect");
 		exit(1);
     	}
@@ -47,38 +49,30 @@ int main(void)
 
 	done = 0;
 	do {
-		n = recv(s, buffer, sizeof(buffer), 0);
-		if (n <= 0) {
-			if (n < 0) { 
+		bytes = recv(sock, buffer, sizeof(buffer), 0);
+		if (bytes <= 0) {
+			if (bytes < 0) { 
 				perror("recv");
 			}
 			done = 1;
 		}
-		/*
-		if (n < 0) {
-			perror("recv");
-		}
-		else {
-			printf("Server closed connection\n");
-			exit(1);
-		}
-		*/
 
-		if (strcmp(buffer, "q\n") == 0) {
+		if (strlen(buffer) <= 0) {
 			printf("Connection cut.\n");
-			close(s);
+			close(sock);
 			exit(1);
 		}
+
 		printf("Received: %s", buffer);
 
-		for(int a = 0; a < 256; a++) {
-			buffer[a] = '\0';
+		for(int counter = 0; counter < MAXN; counter++) {
+			buffer[counter] = '\0';
 		}
 	} while(!done);
 
 	printf("\n");
 
-	close(s);
+	close(sock);
 
 	return 0;
 } 
