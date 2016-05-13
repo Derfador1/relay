@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 
-#define SOCK_PATH "echo_socket"
+#define SOCK_PATH "/home/sparadis/file"
 
 /*
 I get this code idea/implementation from
