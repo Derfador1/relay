@@ -25,10 +25,13 @@ int main(void)
 	char buffer[MAXN];
 	int done;
 
+	//my own preference for initializing buffer
+
 	for(int counter = 0; counter < MAXN; counter++) {
 		buffer[counter] = '\0';
 	}
 	
+	//creating my socket
 	if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
 		exit(1);
@@ -36,6 +39,7 @@ int main(void)
 
 	printf("Trying to connect...\n");
 
+	//setting up the things for connections
 	local.sun_family = AF_UNIX;
 	strcpy(local.sun_path, SOCK_PATH);
 	len = strlen(local.sun_path) + sizeof(local.sun_family);
@@ -49,6 +53,7 @@ int main(void)
 
 	done = 0;
 	do {
+		//recieve messages from the connection
 		bytes = recv(sock, buffer, sizeof(buffer), 0);
 		if (bytes <= 0) {
 			if (bytes < 0) { 
@@ -57,6 +62,7 @@ int main(void)
 			done = 1;
 		}
 
+		//checking if you get a message of nothing
 		if (strlen(buffer) <= 0) {
 			printf("Connection cut.\n");
 			close(sock);
