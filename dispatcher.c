@@ -18,8 +18,9 @@ stackoverflow.com/questions/2605182/when-binding-a
 
 int main(void) 
 {
-	int ret, s, t, s2;
-	int i = 0;
+	int s, s2;
+	int t;
+	int broadcast = 1;
 	struct sockaddr_in local;
 	struct sockaddr_in remote;
 	char buffer[256];
@@ -30,6 +31,16 @@ int main(void)
 	
 	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
+		exit(1);
+	}
+
+	int enable = 1;
+	if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+		perror("setsockopt(SO_REUSEADDR) failed");
+	}
+
+	if (setsockopt(s, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof broadcast) == -1) {
+		perror("setsockopt (SO_BROADCAST)");
 		exit(1);
 	}
 
@@ -50,10 +61,6 @@ int main(void)
 		exit(1);
 	}
 
-	//printf("Enter a line: ");
-	//while((buffer[i] = getchar()) != '\n' && (!feof(stdin))) {
-	//	i++;
-	//}
 
 	t = sizeof(remote);
 	if ((s2 = accept(s, (struct sockaddr *)&remote, &t)) == -1) {
@@ -64,10 +71,21 @@ int main(void)
 	printf("Connected.\n");
 
 	while(printf("Enter a line: "), fgets(buffer, 256, stdin), !feof(stdin)) {
-		//printf("buff: %s\n", buffer);	
+		if (strcmp(buffer, "q\n") == 0) {
+			printf("quitting...");
+			close(s);
+			exit(1);
+		}
+
+		if (send(s2, buffer, (strlen(buffer)-1), 0) == -1) {
+		    perror("send");
+		    exit(1);
+		}
 	}
+
+	close(s);
 	
-	send(s, buffer, strlen(buffer), 0);
-	recv(s, buffer, sizeof(buffer), 0);
-	printf("%s\r\n", buffer);
+	//send(s, buffer, strlen(buffer), 0);
+	//recv(s, buffer, sizeof(buffer), 0);
+	//printf("%s\r\n", buffer);
 }
